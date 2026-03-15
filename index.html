@@ -575,17 +575,55 @@ body {
     recalc();
   }
 
-  function downloadPDF() {
-    // Collect QR image as base64 so it renders in new window
-    const qrImg = document.querySelector('#qr-canvas img') || document.querySelector('#qr-canvas canvas');
-    let qrSrc = '';
-    if (qrImg) {
-      if (qrImg.tagName === 'CANVAS') {
-        qrSrc = qrImg.toDataURL('image/png');
-      } else {
-        qrSrc = qrImg.src;
+  function getQRBase64() {
+    return new Promise((resolve) => {
+      // Try canvas first (desktop Chrome)
+      const canvas = document.querySelector('#qr-canvas canvas');
+      if (canvas) { resolve(canvas.toDataURL('image/png')); return; }
+
+      // Try img tag (mobile browsers)
+      const img = document.querySelector('#qr-canvas img');
+      if (img && img.src && img.src.startsWith('data:')) {
+        resolve(img.src); return;
       }
-    }
+
+      // img exists but src is a URL — draw it onto a canvas to get base64
+      if (img && img.src) {
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width  = 108; tmpCanvas.height = 108;
+        const ctx = tmpCanvas.getContext('2d');
+        const tempImg = new Image();
+        tempImg.crossOrigin = 'anonymous';
+        tempImg.onload  = () => { ctx.drawImage(tempImg, 0, 0, 108, 108); resolve(tmpCanvas.toDataURL('image/png')); };
+        tempImg.onerror = () => resolve('');
+        tempImg.src = img.src;
+        return;
+      }
+
+      // Fallback: regenerate QR fresh on a canvas
+      const grand = parseFloat((document.getElementById('t-grand')?.textContent || '0').replace('Rs.','')) || 0;
+      const upi = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${grand.toFixed(2)}&cu=INR`;
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+      document.body.appendChild(holder);
+      const qr = new QRCode(holder, { text: upi, width: 108, height: 108,
+        colorDark: '#1a3a1a', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M });
+      setTimeout(() => {
+        const c = holder.querySelector('canvas');
+        const i = holder.querySelector('img');
+        let src = '';
+        if (c) src = c.toDataURL('image/png');
+        else if (i) src = i.src;
+        document.body.removeChild(holder);
+        resolve(src);
+      }, 300);
+    });
+  }
+
+  async function downloadPDF() {
+    // Always get QR as base64 first — works on mobile & desktop
+    const qrSrc = await getQRBase64();
 
     // Gather all current input values
     const getValue = id => (document.getElementById(id)?.value || '');
