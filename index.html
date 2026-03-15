@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadheKrishna Vegetable & Fruits — Bill</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #e8ede8;
+  min-height: 100vh;
+  padding: 28px 20px 48px;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  max-width: 860px; margin: 0 auto 22px;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.toolbar-title { font-size: 15px; font-weight: 700; color: #1e3a1e; }
+.toolbar-title span { color: #2a7d2a; }
+.toolbar-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 20px; border: none; border-radius: 7px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+}
+.btn-green  { background: #1a5c1a; color: #fff; box-shadow: 0 3px 10px rgba(26,92,26,.3); }
+.btn-green:hover  { background: #134613; transform: translateY(-1px); }
+.btn-red    { background: #c0392b; color: #fff; box-shadow: 0 3px 10px rgba(192,57,43,.28); }
+.btn-red:hover    { background: #a93226; transform: translateY(-1px); }
+.btn-outline{ background: #fff; color: #1e3a1e; border: 1.5px solid #b8cbb8; }
+.btn-outline:hover{ border-color: #1a5c1a; color: #1a5c1a; }
+
+/* ── BILL CARD ── */
+#bill-wrapper {
+  width: 860px; margin: 0 auto;
+  border-radius: 6px; overflow: hidden;
+  box-shadow: 0 10px 50px rgba(0,0,0,.15);
+}
+#bill { background: #fff; width: 860px; font-family: 'Inter', sans-serif; }
+
+/* ══ HEADER BAND ══ */
+.bill-header-band {
+  background: #1a5c1a;
+  padding: 24px 40px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.logo-main {
+  font-size: 31px; font-weight: 900;
+  color: #fff; letter-spacing: -0.5px; line-height: 1;
+}
+.logo-main span { color: #72e872; }
+.logo-sub {
+  font-size: 11px; font-weight: 600;
+  color: #a0d8a0; margin-top: 5px;
+  letter-spacing: 3px; text-transform: uppercase;
+}
+.header-right { text-align: right; }
+.owner-name  { font-size: 14px; font-weight: 700; color: #fff; }
+.owner-phone { font-size: 12px; color: #a0d8a0; margin-top: 3px; }
+.invoice-badge {
+  display: inline-block; margin-top: 9px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.28);
+  color: #fff; font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; padding: 3px 11px;
+  border-radius: 30px; text-transform: uppercase;
+}
+
+/* ══ ACCENT STRIPE ══ */
+.stripe {
+  height: 4px;
+  background: linear-gradient(90deg, #52c452 0%, #1a5c1a 50%, #52c452 100%);
+}
+
+/* ══ BODY ══ */
+.bill-body { padding: 26px 40px 20px; }
+
+/* META ROW */
+.meta-row { display: flex; gap: 28px; margin-bottom: 22px; align-items: flex-start; }
+.meta-left { flex: 0 0 196px; }
+.meta-field { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
+.meta-lbl {
+  font-size: 10px; font-weight: 700; color: #3d6b3d;
+  text-transform: uppercase; letter-spacing: 1px; min-width: 40px;
+}
+.meta-inp {
+  border: none; border-bottom: 1.5px solid #c4d8c4;
+  outline: none; font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600; padding: 2px 4px;
+  width: 140px; color: #111; background: transparent;
+}
+.meta-inp:focus { border-bottom-color: #1a5c1a; }
+
+/* CUSTOMER TABLE */
+.cust-table { flex: 1; border-collapse: collapse; border: 1.5px solid #ccdccc; }
+.cust-table td { border: 1px solid #ddeedd; padding: 0; }
+.cust-lbl {
+  background: #f2faf2; font-size: 10px; font-weight: 700;
+  color: #2a6b2a; padding: 7px 12px;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  width: 80px; white-space: nowrap;
+}
+.cust-val {
+  border: none; outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 500;
+  padding: 7px 12px; width: 100%;
+  color: #111; background: #fff;
+}
+.cust-val:focus { background: #f7fdf7; }
+
+/* SECTION LABEL */
+.sec-lbl {
+  font-size: 10px; font-weight: 800; letter-spacing: 2px;
+  color: #3d6b3d; text-transform: uppercase;
+  margin-bottom: 9px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-lbl::after { content:''; flex:1; height:1px; background:#ddeedd; }
+
+/* ITEMS TABLE */
+.items-section { margin-bottom: 20px; }
+.items-table { width: 100%; border-collapse: collapse; border: 1.5px solid #ccdccc; }
+.items-table thead tr { background: #1a5c1a; }
+.items-table th {
+  font-size: 10px; font-weight: 800; color: #fff;
+  padding: 11px 14px; text-align: left;
+  letter-spacing: 1px; text-transform: uppercase; border: none;
+}
+.items-table th.c { text-align: center; }
+.items-table th.r { text-align: right; }
+.items-table tbody tr:nth-child(odd)  td { background: #fff; }
+.items-table tbody tr:nth-child(even) td { background: #f4fbf4; }
+.items-table tbody tr:hover td { background: #eaf7ea; transition: background 0.12s; }
+.items-table td { border-bottom: 1px solid #e4efe4; border-right: 1px solid #e4efe4; padding: 0; }
+.items-table td:last-child { border-right: none; }
+.ii {
+  border: none; outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px; font-weight: 500;
+  padding: 9px 14px; width: 100%;
+  background: transparent; color: #111;
+}
+.ii::placeholder { color: #c0d4c0; }
+.ii.c { text-align: center; } .ii.r { text-align: right; }
+.row-total {
+  font-size: 12.5px; font-weight: 700;
+  padding: 9px 14px; text-align: right; color: #1a5c1a;
+}
+.del-btn {
+  background: none; border: none; cursor: pointer;
+  color: #c0392b; font-size: 13px; padding: 9px 8px;
+  opacity: 0.3; transition: opacity 0.15s; display: block; margin: 0 auto;
+}
+.del-btn:hover { opacity: 1; }
+.add-row-btn {
+  margin-top: 8px; padding: 5px 15px;
+  background: transparent; color: #2a7d2a;
+  border: 1.5px dashed #8aba8a; border-radius: 5px;
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px; transition: all 0.2s;
+}
+.add-row-btn:hover { background: #f0fbf0; border-color: #1a5c1a; }
+
+/* ══ BOTTOM SECTION ══ */
+.sec-lbl2 {
+  font-size: 10px; font-weight: 800; letter-spacing: 2px;
+  color: #3d6b3d; text-transform: uppercase;
+  margin-bottom: 9px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-lbl2::after { content:''; flex:1; height:1px; background:#ddeedd; }
+
+.bottom-wrap { padding: 0 40px 28px; }
+.bottom-section {
+  display: flex; align-items: stretch;
+  border: 1.5px solid #ccdccc; border-radius: 5px;
+  overflow: hidden;
+}
+
+/* NOTES */
+.notes-box {
+  flex: 1; display: flex; flex-direction: column;
+  border-right: 1.5px solid #ccdccc;
+}
+.box-hdr {
+  background: #1a5c1a;
+  padding: 8px 14px;
+  font-size: 10px; font-weight: 800;
+  color: #fff; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.notes-ta {
+  border: none; outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px; padding: 12px 14px;
+  width: 100%; flex: 1; resize: none;
+  color: #111; background: #fff; line-height: 1.65;
+}
+.notes-ta::placeholder { color: #c0d4c0; }
+
+/* QR BOX */
+.qr-box {
+  width: 152px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-right: 1.5px solid #ccdccc;
+  background: #fff; padding: 14px 10px 12px; gap: 7px;
+}
+.qr-title {
+  font-size: 9px; font-weight: 800;
+  color: #1a5c1a; letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+#qr-canvas canvas, #qr-canvas img {
+  width: 108px !important; height: 108px !important;
+}
+.qr-upi-id {
+  font-size: 8px; font-weight: 600;
+  color: #2a7d2a; text-align: center;
+  word-break: break-all; line-height: 1.5;
+}
+.qr-apps { font-size: 8px; color: #999; text-align: center; }
+
+/* TOTALS + SIGNATURE */
+.totals-box {
+  width: 252px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+}
+.t-rows { display: flex; flex-direction: column; }
+.t-row {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid #e4efe4; min-height: 44px;
+}
+.t-lbl {
+  width: 108px; flex-shrink: 0;
+  background: #f2faf2;
+  border-right: 1px solid #e4efe4;
+  display: flex; align-items: center;
+  padding: 0 12px;
+  font-size: 10px; font-weight: 700;
+  color: #2a6b2a; text-transform: uppercase; letter-spacing: 0.8px;
+}
+.t-val {
+  flex: 1; display: flex; align-items: center;
+  justify-content: flex-end;
+  font-size: 13px; font-weight: 600;
+  color: #111; padding: 0 14px;
+}
+.t-inp {
+  flex: 1; border: none; outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600;
+  padding: 0 14px; background: transparent;
+  text-align: right; color: #111; width: 100%;
+}
+/* Grand total */
+.t-row-grand {
+  background: #1a5c1a !important;
+  border-bottom: none; min-height: 56px;
+}
+.t-row-grand .t-lbl {
+  background: transparent !important;
+  color: #a0d8a0 !important;
+  border-right-color: rgba(255,255,255,.2) !important;
+  font-size: 11px;
+}
+.t-row-grand .t-val {
+  color: #fff !important;
+  font-size: 24px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.5px;
+}
+
+/* SIGNATURE */
+.sig-block {
+  background: #fff;
+  border-top: 1.5px solid #ccdccc;
+  padding: 12px 16px 14px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+}
+.sig-name {
+  font-family: 'Dancing Script', cursive;
+  font-size: 22px; color: #1a5c1a; line-height: 1.1;
+}
+.sig-rule { width: 150px; height: 1px; background: #ccdccc; margin: 5px 0 3px; }
+.sig-caption {
+  font-size: 9px; font-weight: 600; color: #4a6b4a;
+  letter-spacing: 0.3px; text-align: right; line-height: 1.5;
+}
+.sig-stamp {
+  margin-top: 5px;
+  font-size: 8px; font-weight: 700;
+  color: #1a5c1a; letter-spacing: 1px;
+  background: #eaf7ea; border: 1px solid #b4d8b4;
+  border-radius: 3px; padding: 2px 8px;
+}
+
+/* ══ FOOTER ══ */
+.bill-footer {
+  background: #1a5c1a;
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-left {
+  font-size: 22px; font-weight: 900;
+  color: #fff; line-height: 1.25;
+}
+.footer-left span { color: #72e872; }
+.footer-sep { width: 1px; height: 48px; background: rgba(255,255,255,.2); flex-shrink: 0; }
+.footer-right { text-align: right; }
+.footer-right .f-phone { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.footer-right p { font-size: 11px; color: #a0d8a0; line-height: 1.9; }
+
+/* PRINT */
+@media print {
+  body { background: #fff; padding: 0; }
+  .toolbar { display: none !important; }
+  #bill-wrapper, #bill { width: 100% !important; box-shadow: none !important; }
+  .add-row-btn, .del-btn { display: none !important; }
+}
+@media (max-width: 900px) {
+  #bill-wrapper, #bill { width: 100%; }
+  .bill-body, .bottom-wrap { padding: 18px; }
+  .bill-header-band, .bill-footer { padding: 16px 18px; }
+  .meta-row { flex-direction: column; }
+  .bottom-section { flex-direction: column; }
+  .qr-box, .totals-box { width: 100%; border-right: none; border-top: 1.5px solid #ccdccc; }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-title">🌿 <span>RadheKrishna</span> Bill Generator</div>
+  <div class="toolbar-btns">
+    <button class="btn btn-green"   onclick="downloadPDF()">⬇ Download PDF</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-red"     onclick="clearAll()">↺ Reset</button>
+  </div>
+</div>
+
+<div id="bill-wrapper">
+<div id="bill">
+
+  <!-- HEADER -->
+  <div class="bill-header-band">
+    <div>
+      <div class="logo-main">Radhe<span>Krishna</span></div>
+      <div class="logo-sub">Vegetables &amp; Fruits</div>
+    </div>
+    <div class="header-right">
+      <div class="owner-name">Hitendra Rojasara</div>
+      <div class="owner-phone">+91 9898662364</div>
+      <div class="invoice-badge">Invoice</div>
+    </div>
+  </div>
+  <div class="stripe"></div>
+
+  <!-- BODY -->
+  <div class="bill-body">
+
+    <!-- NO + DATE + CUSTOMER -->
+    <div class="meta-row">
+      <div class="meta-left">
+        <div class="meta-field">
+          <span class="meta-lbl">No.</span>
+          <input class="meta-inp" type="text" id="inv-no" placeholder="Invoice No.">
+        </div>
+        <div class="meta-field">
+          <span class="meta-lbl">Date</span>
+          <input class="meta-inp" type="text" id="inv-date" placeholder="DD/MM/YYYY">
+        </div>
+      </div>
+      <table class="cust-table">
+        <tr>
+          <td class="cust-lbl">Customer</td>
+          <td><input class="cust-val" type="text"  id="cust-name"  placeholder="Customer name"></td>
+        </tr>
+        <tr>
+          <td class="cust-lbl">Address</td>
+          <td><input class="cust-val" type="text"  id="cust-addr"  placeholder="Full address"></td>
+        </tr>
+        <tr>
+          <td class="cust-lbl">Phone</td>
+          <td><input class="cust-val" type="text"  id="cust-phone" placeholder="Mobile number"></td>
+        </tr>
+        <tr>
+          <td class="cust-lbl">Email</td>
+          <td><input class="cust-val" type="email" id="cust-email" placeholder="Email address"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ITEMS -->
+    <div class="items-section">
+      <div class="sec-lbl">Items</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width:44%">Item Description</th>
+            <th class="c" style="width:13%">Qty</th>
+            <th class="r" style="width:16%">Price (Rs.)</th>
+            <th class="r" style="width:16%">Total (Rs.)</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow()">+ Add Item</button>
+    </div>
+
+  </div><!-- /bill-body -->
+
+  <!-- BOTTOM -->
+  <div class="bottom-wrap">
+    <div class="sec-lbl2">Summary</div>
+    <div class="bottom-section">
+
+      <!-- NOTES -->
+      <div class="notes-box">
+        <div class="box-hdr">Notes</div>
+        <textarea class="notes-ta" id="notes" placeholder="Special instructions, payment terms, or any additional notes..."></textarea>
+      </div>
+
+      <!-- QR -->
+      <div class="qr-box">
+        <div class="qr-title">Scan &amp; Pay</div>
+        <div id="qr-canvas"></div>
+        <div class="qr-upi-id">hitendrarojasara<br>@okhdfcbank</div>
+        <div class="qr-apps">GPay · PhonePe · Paytm</div>
+      </div>
+
+      <!-- TOTALS + SIG -->
+      <div class="totals-box">
+        <div class="box-hdr">Bill Summary</div>
+        <div class="t-rows">
+          <div class="t-row">
+            <div class="t-lbl">Subtotal</div>
+            <div class="t-val" id="t-subtotal">Rs. 0.00</div>
+          </div>
+          <div class="t-row">
+            <div class="t-lbl">Discount</div>
+            <input class="t-inp" type="number" id="discount-amt" placeholder="0.00" min="0" step="0.01" oninput="recalc()">
+          </div>
+          <div class="t-row t-row-grand">
+            <div class="t-lbl">Grand Total</div>
+            <div class="t-val" id="t-grand">Rs. 0.00</div>
+          </div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-name">H.R. Rojasara</div>
+          <div class="sig-rule"></div>
+          <div class="sig-caption">Digitally signed by<br><strong>Hitendra Rojasara</strong></div>
+          <div class="sig-stamp">✓ Authorised Signatory</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="bill-footer">
+    <div class="footer-left">Thank You for<br><span>Shopping with Us!!</span></div>
+    <div class="footer-sep"></div>
+    <div class="footer-right">
+      <div class="f-phone">+91 98986 62364</div>
+      <p>RadheKrishna Vegetable &amp; Fruits</p>
+      <p>Shop, Jamnavad Road, Dhoraji – 360410</p>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+  const UPI_ID   = 'hitendrarojasara@okhdfcbank';
+  const UPI_NAME = 'RadheKrishna Vegetable';
+  let rowCount = 0;
+
+  function init() {
+    for (let i = 0; i < 8; i++) addRow(false);
+    const t = new Date();
+    document.getElementById('inv-date').value =
+      String(t.getDate()).padStart(2,'0') + '/' +
+      String(t.getMonth()+1).padStart(2,'0') + '/' + t.getFullYear();
+    document.getElementById('inv-no').value = 'RKV-' + Math.floor(1000 + Math.random()*9000);
+  }
+
+  function addRow(focus = true) {
+    rowCount++;
+    const id = rowCount;
+    const tr = document.createElement('tr');
+    tr.id = `row-${id}`;
+    tr.innerHTML = `
+      <td><input class="ii" type="text" placeholder="Vegetable / Fruit name" oninput="autoCheck(this)"></td>
+      <td><input class="ii c" type="number" id="qty-${id}" placeholder="0" min="0" step="0.5" oninput="calcRow(${id})"></td>
+      <td><input class="ii r" type="number" id="prc-${id}" placeholder="0.00" min="0" step="0.01" oninput="calcRow(${id})"></td>
+      <td><div class="row-total" id="tot-${id}">—</div></td>
+      <td><button class="del-btn" onclick="removeRow(${id})">✕</button></td>`;
+    document.getElementById('items-body').appendChild(tr);
+    if (focus) tr.querySelector('.ii').focus();
+  }
+
+  function removeRow(id) {
+    document.getElementById(`row-${id}`)?.remove();
+    recalc();
+    if (!document.querySelectorAll('#items-body tr').length) addRow(false);
+  }
+
+  function calcRow(id) {
+    const q = parseFloat(document.getElementById(`qty-${id}`)?.value) || 0;
+    const p = parseFloat(document.getElementById(`prc-${id}`)?.value) || 0;
+    const el = document.getElementById(`tot-${id}`);
+    if (el) el.textContent = (q && p) ? 'Rs. ' + (q*p).toFixed(2) : '—';
+    recalc();
+  }
+
+  function recalc() {
+    let sub = 0;
+    document.querySelectorAll('[id^="tot-"]').forEach(el => {
+      const n = parseFloat(el.textContent.replace('Rs.',''));
+      if (!isNaN(n)) sub += n;
+    });
+    const disc  = parseFloat(document.getElementById('discount-amt')?.value) || 0;
+    const grand = Math.max(0, sub - disc);
+    document.getElementById('t-subtotal').textContent = 'Rs. ' + sub.toFixed(2);
+    document.getElementById('t-grand').textContent    = 'Rs. ' + grand.toFixed(2);
+    generateQR(grand);
+  }
+
+  function generateQR(amount) {
+    const amt = amount > 0 ? amount.toFixed(2) : '0.00';
+    const upi = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amt}&cu=INR`;
+    const c = document.getElementById('qr-canvas');
+    c.innerHTML = '';
+    new QRCode(c, { text: upi, width: 108, height: 108,
+      colorDark: '#1a3a1a', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M });
+  }
+
+  function autoCheck(el) {
+    const row = el.closest('tr');
+    if (!row?.id?.startsWith('row-')) return;
+    if (el.value === '') {
+      const id = row.id.replace('row-','');
+      const q = document.getElementById(`qty-${id}`); if(q) q.value='';
+      const p = document.getElementById(`prc-${id}`); if(p) p.value='';
+      const t = document.getElementById(`tot-${id}`); if(t) t.textContent='—';
+      recalc();
+    }
+  }
+
+  function clearAll() {
+    if (!confirm('Reset the entire bill?')) return;
+    document.getElementById('inv-no').value = 'RKV-' + Math.floor(1000+Math.random()*9000);
+    const t = new Date();
+    document.getElementById('inv-date').value =
+      String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();
+    ['cust-name','cust-addr','cust-phone','cust-email','notes','discount-amt']
+      .forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+    document.getElementById('items-body').innerHTML='';
+    rowCount=0;
+    for(let i=0;i<8;i++) addRow(false);
+    recalc();
+  }
+
+  function downloadPDF() {
+    // Collect QR image as base64 so it renders in new window
+    const qrImg = document.querySelector('#qr-canvas img') || document.querySelector('#qr-canvas canvas');
+    let qrSrc = '';
+    if (qrImg) {
+      if (qrImg.tagName === 'CANVAS') {
+        qrSrc = qrImg.toDataURL('image/png');
+      } else {
+        qrSrc = qrImg.src;
+      }
+    }
+
+    // Gather all current input values
+    const getValue = id => (document.getElementById(id)?.value || '');
+    const invNo    = getValue('inv-no');
+    const invDate  = getValue('inv-date');
+    const custName = getValue('cust-name');
+    const custAddr = getValue('cust-addr');
+    const custPhone= getValue('cust-phone');
+    const custEmail= getValue('cust-email');
+    const notes    = getValue('notes');
+    const discount = getValue('discount-amt');
+    const subtotal = document.getElementById('t-subtotal')?.textContent || 'Rs. 0.00';
+    const grandTotal = document.getElementById('t-grand')?.textContent || 'Rs. 0.00';
+
+    // Collect item rows
+    let itemRows = '';
+    document.querySelectorAll('#items-body tr').forEach((tr, i) => {
+      const inputs = tr.querySelectorAll('input');
+      const name  = inputs[0]?.value || '';
+      const qty   = inputs[1]?.value || '';
+      const price = inputs[2]?.value || '';
+      const total = tr.querySelector('.row-total')?.textContent || '—';
+      if (!name && !qty && !price) return; // skip empty rows
+      const bg = i % 2 === 0 ? '#fff' : '#f4fbf4';
+      itemRows += `<tr style="background:${bg}">
+        <td style="padding:9px 14px;border-bottom:1px solid #e4efe4;border-right:1px solid #e4efe4;font-size:12.5px;">${name}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e4efe4;border-right:1px solid #e4efe4;font-size:12.5px;text-align:center;">${qty}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e4efe4;border-right:1px solid #e4efe4;font-size:12.5px;text-align:right;">${price}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e4efe4;font-size:12.5px;font-weight:700;color:#1a5c1a;text-align:right;">${total}</td>
+      </tr>`;
+    });
+    if (!itemRows) itemRows = `<tr><td colspan="4" style="padding:18px;text-align:center;color:#aaa;font-size:12px;">No items</td></tr>`;
+
+    const discountRow = discount ? `
+      <div style="display:flex;align-items:center;border-bottom:1px solid #e4efe4;min-height:44px;">
+        <div style="width:108px;background:#f2faf2;border-right:1px solid #e4efe4;padding:0 12px;font-size:10px;font-weight:700;color:#2a6b2a;text-transform:uppercase;letter-spacing:.8px;align-self:stretch;display:flex;align-items:center;">Discount</div>
+        <div style="flex:1;text-align:right;font-size:13px;font-weight:600;padding:0 14px;">Rs. ${parseFloat(discount).toFixed(2)}</div>
+      </div>` : '';
+
+    const html = `<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<title>RadheKrishna Bill – ${invNo}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:#fff;margin:0;padding:0;}
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;}
+    @page{margin:0;size:794px auto;}
+    html,body{width:794px;}
+  }
+</style>
+</head><body>
+<div style="width:794px;margin:0 auto;font-family:'Inter',sans-serif;background:#fff;">
+
+  <!-- HEADER -->
+  <div style="background:#1a5c1a;padding:24px 40px 20px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:29px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1;">Radhe<span style="color:#72e872;">Krishna</span></div>
+      <div style="font-size:11px;font-weight:600;color:#a0d8a0;margin-top:5px;letter-spacing:3px;text-transform:uppercase;">Vegetables &amp; Fruits</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:14px;font-weight:700;color:#fff;">Hitendra Rojasara</div>
+      <div style="font-size:12px;color:#a0d8a0;margin-top:3px;">+91 9898662364</div>
+      <div style="display:inline-block;margin-top:9px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 11px;border-radius:30px;">INVOICE</div>
+    </div>
+  </div>
+  <div style="height:4px;background:linear-gradient(90deg,#52c452,#1a5c1a,#52c452);"></div>
+
+  <!-- BODY -->
+  <div style="padding:26px 40px 20px;">
+
+    <!-- META + CUSTOMER -->
+    <div style="display:flex;gap:28px;margin-bottom:22px;align-items:flex-start;">
+      <div style="flex:0 0 196px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;">
+          <span style="font-size:10px;font-weight:700;color:#3d6b3d;text-transform:uppercase;letter-spacing:1px;min-width:40px;">No.</span>
+          <span style="font-size:13px;font-weight:700;color:#111;border-bottom:1.5px solid #c4d8c4;padding-bottom:2px;min-width:120px;">${invNo}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;font-weight:700;color:#3d6b3d;text-transform:uppercase;letter-spacing:1px;min-width:40px;">Date</span>
+          <span style="font-size:13px;font-weight:700;color:#111;border-bottom:1.5px solid #c4d8c4;padding-bottom:2px;min-width:120px;">${invDate}</span>
+        </div>
+      </div>
+      <table style="flex:1;border-collapse:collapse;border:1.5px solid #ccdccc;">
+        <tr><td style="background:#f2faf2;font-size:10px;font-weight:700;color:#2a6b2a;padding:7px 12px;letter-spacing:.8px;text-transform:uppercase;width:80px;border:1px solid #ddeedd;">Customer</td><td style="font-size:12px;font-weight:500;padding:7px 12px;border:1px solid #ddeedd;">${custName}</td></tr>
+        <tr><td style="background:#f2faf2;font-size:10px;font-weight:700;color:#2a6b2a;padding:7px 12px;letter-spacing:.8px;text-transform:uppercase;border:1px solid #ddeedd;">Address</td><td style="font-size:12px;font-weight:500;padding:7px 12px;border:1px solid #ddeedd;">${custAddr}</td></tr>
+        <tr><td style="background:#f2faf2;font-size:10px;font-weight:700;color:#2a6b2a;padding:7px 12px;letter-spacing:.8px;text-transform:uppercase;border:1px solid #ddeedd;">Phone</td><td style="font-size:12px;font-weight:500;padding:7px 12px;border:1px solid #ddeedd;">${custPhone}</td></tr>
+        <tr><td style="background:#f2faf2;font-size:10px;font-weight:700;color:#2a6b2a;padding:7px 12px;letter-spacing:.8px;text-transform:uppercase;border:1px solid #ddeedd;">Email</td><td style="font-size:12px;font-weight:500;padding:7px 12px;border:1px solid #ddeedd;">${custEmail}</td></tr>
+      </table>
+    </div>
+
+    <!-- ITEMS -->
+    <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:#3d6b3d;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;">
+      Items <span style="flex:1;height:1px;background:#ddeedd;display:block;"></span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;border:1.5px solid #ccdccc;">
+      <thead>
+        <tr style="background:#1a5c1a;">
+          <th style="font-size:10px;font-weight:800;color:#fff;padding:11px 14px;text-align:left;letter-spacing:1px;text-transform:uppercase;width:44%;">Item Description</th>
+          <th style="font-size:10px;font-weight:800;color:#fff;padding:11px 14px;text-align:center;letter-spacing:1px;text-transform:uppercase;width:13%;">Qty</th>
+          <th style="font-size:10px;font-weight:800;color:#fff;padding:11px 14px;text-align:right;letter-spacing:1px;text-transform:uppercase;width:16%;">Price (Rs.)</th>
+          <th style="font-size:10px;font-weight:800;color:#fff;padding:11px 14px;text-align:right;letter-spacing:1px;text-transform:uppercase;width:16%;">Total (Rs.)</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+  </div>
+
+  <!-- BOTTOM SUMMARY -->
+  <div style="padding:0 40px 28px;">
+    <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:#3d6b3d;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;">
+      Summary <span style="flex:1;height:1px;background:#ddeedd;display:block;"></span>
+    </div>
+    <div style="display:flex;align-items:stretch;border:1.5px solid #ccdccc;border-radius:5px;overflow:hidden;">
+
+      <!-- NOTES -->
+      <div style="flex:1;display:flex;flex-direction:column;border-right:1.5px solid #ccdccc;">
+        <div style="background:#1a5c1a;padding:8px 14px;font-size:10px;font-weight:800;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Notes</div>
+        <div style="padding:12px 14px;font-size:11.5px;line-height:1.65;color:#111;flex:1;min-height:80px;">${notes || ''}</div>
+      </div>
+
+      <!-- QR -->
+      <div style="width:152px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1.5px solid #ccdccc;background:#fff;padding:14px 10px 12px;gap:7px;">
+        <div style="font-size:9px;font-weight:800;color:#1a5c1a;letter-spacing:1.5px;text-transform:uppercase;">Scan &amp; Pay</div>
+        ${qrSrc ? `<img src="${qrSrc}" width="108" height="108" style="display:block;">` : ''}
+        <div style="font-size:8px;font-weight:600;color:#2a7d2a;text-align:center;word-break:break-all;line-height:1.5;">hitendrarojasara<br>@okhdfcbank</div>
+        <div style="font-size:8px;color:#999;text-align:center;">GPay · PhonePe · Paytm</div>
+      </div>
+
+      <!-- TOTALS + SIG -->
+      <div style="width:252px;flex-shrink:0;display:flex;flex-direction:column;">
+        <div style="background:#1a5c1a;padding:8px 14px;font-size:10px;font-weight:800;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Bill Summary</div>
+        <div style="display:flex;align-items:stretch;border-bottom:1px solid #e4efe4;min-height:44px;">
+          <div style="width:108px;background:#f2faf2;border-right:1px solid #e4efe4;padding:0 12px;font-size:10px;font-weight:700;color:#2a6b2a;text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;">Subtotal</div>
+          <div style="flex:1;text-align:right;font-size:13px;font-weight:600;padding:0 14px;display:flex;align-items:center;justify-content:flex-end;">${subtotal}</div>
+        </div>
+        ${discountRow}
+        <div style="display:flex;align-items:center;background:#1a5c1a;min-height:56px;">
+          <div style="width:108px;padding:0 12px;font-size:11px;font-weight:700;color:#a0d8a0;text-transform:uppercase;letter-spacing:.8px;">Grand Total</div>
+          <div style="flex:1;text-align:right;font-size:24px;font-weight:900;color:#fff;padding:0 14px;letter-spacing:-0.5px;">${grandTotal}</div>
+        </div>
+        <!-- SIGNATURE -->
+        <div style="background:#fff;border-top:1.5px solid #ccdccc;padding:12px 16px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;">
+          <div style="font-family:'Dancing Script',cursive;font-size:22px;color:#1a5c1a;line-height:1.1;">H.R. Rojasara</div>
+          <div style="width:150px;height:1px;background:#ccdccc;margin:5px 0 3px;"></div>
+          <div style="font-size:9px;font-weight:600;color:#4a6b4a;letter-spacing:.3px;text-align:right;line-height:1.5;">Digitally signed by<br><strong>Hitendra Rojasara</strong></div>
+          <div style="margin-top:5px;font-size:8px;font-weight:700;color:#1a5c1a;letter-spacing:1px;background:#eaf7ea;border:1px solid #b4d8b4;border-radius:3px;padding:2px 8px;">&#10003; Authorised Signatory</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="background:#1a5c1a;padding:18px 40px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:22px;font-weight:900;color:#fff;line-height:1.25;">Thank You for<br><span style="color:#72e872;">Shopping with Us!!</span></div>
+    <div style="width:1px;height:48px;background:rgba(255,255,255,.2);flex-shrink:0;"></div>
+    <div style="text-align:right;">
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">+91 98986 62364</div>
+      <div style="font-size:11px;color:#a0d8a0;line-height:1.9;">RadheKrishna Vegetable &amp; Fruits</div>
+      <div style="font-size:11px;color:#a0d8a0;">Shop, Jamnavad Road, Dhoraji – 360410</div>
+    </div>
+  </div>
+
+</div>
+<script>
+  window.onload = function() {
+    setTimeout(function() { window.print(); }, 800);
+  };
+<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) {
+      alert('Please allow popups for this page to download the PDF, then try again.');
+      return;
+    }
+    win.document.write(html);
+    win.document.close();
+  }
+
+  init();
+  generateQR(0);
+</script>
+</body>
+</html>
